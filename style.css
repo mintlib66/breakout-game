@@ -25,7 +25,6 @@ h1 {
 .btn {
   cursor: pointer;
   padding: 0.5rem 1rem;
-  margin: 1rem;
   border: 1px solid #fff;
   border-radius: 5px;
   background-color: #fff;
@@ -38,20 +37,32 @@ h1 {
 .btn:active {
   transform: scale(0.98);
 }
+.rules-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
 
+/* 사이드 */
 .rules {
-  display: none;
   position: absolute;
   top: 0;
   left: 0;
-  width: 50vw;
+  width: 400px;
   height: 100vh;
 
   padding: 1rem;
   color: #fff;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: #333;
+  line-height: 1.5;
+  transform: translateX(-400px);
+  transition: transform 0.7s ease-in-out;
+}
+.rules.show {
+  transform: translateX(0px);
 }
 
+/* 캔버스 */
 .canvas {
   width: 800px;
   height: 600px;
