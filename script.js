@@ -1,9 +1,14 @@
+//변수 선언
 const rules_btn = document.querySelector('#rules-btn')
 const close_btn = document.querySelector('#close-btn')
 const rules = document.querySelector('#rules')
 const canvas = document.querySelector('#canvas')
 const ctx = canvas.getContext('2d')
 const dpr = window.devicePixelRatio
+
+const brickRowCount = 9
+const brickColumnCount = 5
+
 let scoreValue = 0
 
 //캔버스 해상도 비율 조정
@@ -37,12 +42,30 @@ const score = {
   text: `점수: ${scoreValue}`,
   color: '#000',
 }
+const brickInfo = {
+  w: 70,
+  h: 20,
+  padding: 10,
+  offsetX: 45,
+  offsetY: 60,
+  visible: true,
+}
+const bricks = []
+for (let i = 0; i < brickRowCount; i++) {
+  bricks[i] = []
+  for (let j = 0; j < brickColumnCount; j++) {
+    const x = i * (brickInfo.w + brickInfo.padding) + brickInfo.offsetX
+    const y = j * (brickInfo.h + brickInfo.padding) + brickInfo.offsetY
+    bricks[i][j] = { x, y, ...brickInfo }
+  }
+}
 
 //그리기 함수
 function draw() {
   drawBall()
   drawPaddle()
   drawScore()
+  drawBricks()
 }
 
 function drawBall() {
@@ -63,6 +86,16 @@ function drawScore() {
   ctx.font = score.font
   ctx.fillText(score.text, score.x, score.y)
   ctx.closePath()
+}
+function drawBricks() {
+  bricks.forEach(column => {
+    column.forEach(brick => {
+      ctx.beginPath()
+      ctx.fillStyle = brick.visible ? '#a8c4ee' : 'transparent'
+      ctx.fillRect(brick.x, brick.y, brick.w, brick.h)
+      ctx.closePath()
+    })
+  })
 }
 
 //이벤트 리스너
