@@ -31,7 +31,7 @@ const paddle = {
   y: canvas.height - 40,
   width: 80,
   height: 10,
-  speed: 8,
+  speed: 5,
   dx: 0,
   color: '#000',
 }
@@ -62,6 +62,8 @@ for (let i = 0; i < brickRowCount; i++) {
 
 //그리기 함수
 function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
   drawBall()
   drawPaddle()
   drawScore()
@@ -98,6 +100,46 @@ function drawBricks() {
   })
 }
 
+//요소 동작 함수
+function movePaddle() {
+  paddle.x += paddle.dx
+  if (paddle.x + paddle.width > canvas.width) {
+    paddle.x = canvas.width - paddle.width
+  } else if (paddle.x < 0) {
+    paddle.x = 0
+  }
+}
+
+function update() {
+  movePaddle()
+
+  draw()
+
+  requestAnimationFrame(update)
+  console.log(paddle.dx)
+}
+
+//키보드 이벤트
+function keyDownHandler(e) {
+  if (e.key === 'ArrowLeft' || e.key === 'Left') {
+    paddle.dx = -paddle.speed
+  } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+    paddle.dx = paddle.speed
+  }
+  update()
+}
+function keyUpHandler(e) {
+  if (
+    e.key === 'ArrowLeft' ||
+    e.key === 'Left' ||
+    e.key === 'ArrowRight' ||
+    e.key === 'Right'
+  ) {
+    paddle.dx = 0
+    update()
+  }
+}
+
 //이벤트 리스너
 rules_btn.addEventListener('click', () => {
   rules.classList.add('show')
@@ -105,6 +147,8 @@ rules_btn.addEventListener('click', () => {
 close_btn.addEventListener('click', () => {
   rules.classList.remove('show')
 })
+document.addEventListener('keydown', keyDownHandler)
+document.addEventListener('keyup', keyUpHandler)
 
 draw()
 
