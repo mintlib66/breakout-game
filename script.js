@@ -14,13 +14,12 @@ let scoreValue = 0
 //캔버스 해상도 비율 조정
 canvas.width = 800
 canvas.height = 600
-ctx.scale(dpr, dpr)
 
 //요소 정보
 const ball = {
   x: canvas.width / 2,
   y: canvas.height / 2,
-  size: 10,
+  r: 10,
   speed: 4,
   dx: 4,
   dy: -4, //기본은 떨어지는 방향
@@ -29,8 +28,8 @@ const ball = {
 const paddle = {
   x: canvas.width / 2 - 40,
   y: canvas.height - 40,
-  width: 80,
-  height: 10,
+  w: 80,
+  h: 10,
   speed: 5,
   dx: 0,
   color: '#000',
@@ -39,7 +38,6 @@ const score = {
   x: canvas.width - 100,
   y: 40,
   font: '20px Arial',
-  text: `점수: ${scoreValue}`,
   color: '#000',
 }
 const brickInfo = {
@@ -72,7 +70,7 @@ function draw() {
 
 function drawBall() {
   ctx.beginPath()
-  ctx.arc(ball.x, ball.y, ball.size, 0, 2 * Math.PI)
+  ctx.arc(ball.x, ball.y, ball.r, 0, 2 * Math.PI)
   ctx.fillStyle = ball.color
   ctx.fill()
   ctx.closePath()
@@ -80,13 +78,13 @@ function drawBall() {
 function drawPaddle() {
   ctx.beginPath()
   ctx.fillStyle = paddle.color
-  ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height)
+  ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h)
   ctx.closePath()
 }
 function drawScore() {
   ctx.beginPath()
   ctx.font = score.font
-  ctx.fillText(score.text, score.x, score.y)
+  ctx.fillText(`점수: ${scoreValue}`, score.x, score.y)
   ctx.closePath()
 }
 function drawBricks() {
@@ -101,22 +99,89 @@ function drawBricks() {
 }
 
 //요소 동작 함수
+function moveBall() {
+  ball.x += ball.dx
+  ball.y += ball.dy
+
+  //벽에 부딪히면(right, left)
+  if (ball.x + ball.r > canvas.width || ball.x - ball.r < 0) {
+    ball.dx *= -1
+  } //top
+  if (ball.y - ball.r < 0) {
+    ball.dy *= -1
+  }
+  // if (ball.y + ball.r > canvas.height) {
+  //   gameOver()
+  // }
+
+  //막대기에 부딪히면
+  //top
+  if (
+    paddle.x < ball.x - ball.r &&
+    paddle.x + paddle.w > ball.x + ball.r &&
+    paddle.y > ball.y + ball.r
+  ) {
+    ball.dy *= -1
+  }
+  //bottom
+  if (
+    paddle.x < ball.x - ball.r &&
+    paddle.x + paddle.w > ball.x + ball.r &&
+    paddle.y + paddle.h > ball.y - ball.r
+  ) {
+    ball.dy *= -1
+  }
+  //left
+  if (
+    paddle.x < ball.x + ball.r &&
+    paddle.y < ball.y + ball.r &&
+    paddle.y + paddle.h > ball.y - ball.r
+  ) {
+    ball.dx *= -1
+  }
+  //right
+  if (
+    paddle.x + paddle.w > ball.x - ball.r &&
+    paddle.y < ball.y + ball.r &&
+    paddle.y + paddle.h > ball.y - ball.r
+  ) {
+    ball.dx *= -1
+  }
+
+  //블록에 부딪히면
+  bricks.forEach(column => {
+    column.forEach(brick => {
+      if (brick.visible) {
+        if (
+          brick.x < ball.x - ball.r &&
+          brick.x + brick.w > ball.x + ball.r &&
+          brick.y < ball.y + ball.r &&
+          brick.y + brick.h > ball.y - ball.r
+        ) {
+          brick.visible = false
+          ball.dy *= -1
+          scoreValue++
+        }
+      }
+    })
+  })
+}
 function movePaddle() {
   paddle.x += paddle.dx
-  if (paddle.x + paddle.width > canvas.width) {
-    paddle.x = canvas.width - paddle.width
+  if (paddle.x + paddle.w > canvas.width) {
+    paddle.x = canvas.width - paddle.w
   } else if (paddle.x < 0) {
     paddle.x = 0
   }
 }
 
 function update() {
+  moveBall()
   movePaddle()
 
   draw()
 
   requestAnimationFrame(update)
-  console.log(paddle.dx)
 }
 
 //키보드 이벤트
