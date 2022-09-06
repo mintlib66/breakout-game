@@ -10,6 +10,7 @@ const brickRowCount = 9
 const brickColumnCount = 5
 
 let scoreValue = 0
+let isGameStart = false
 
 //캔버스 해상도 비율 조정
 canvas.width = 800
@@ -20,16 +21,16 @@ const ball = {
   x: canvas.width / 2,
   y: canvas.height / 2,
   r: 10,
-  speed: 4,
-  dx: 4,
-  dy: -4, //기본은 떨어지는 방향
+  speed: 2,
+  dx: 2,
+  dy: -2,
   color: '#a8c4ee',
 }
 const paddle = {
-  x: canvas.width / 2 - 40,
+  x: canvas.width / 2 - 50,
   y: canvas.height - 40,
-  w: 80,
-  h: 10,
+  w: 100,
+  h: 20,
   speed: 5,
   dx: 0,
   color: '#000',
@@ -57,6 +58,9 @@ for (let i = 0; i < brickRowCount; i++) {
     bricks[i][j] = { x, y, ...brickInfo }
   }
 }
+
+//초기 실행 함수
+gameWait()
 
 //그리기 함수
 function draw() {
@@ -109,17 +113,17 @@ function moveBall() {
   } //top
   if (ball.y - ball.r < 0) {
     ball.dy *= -1
+  } else if (ball.y + ball.r > canvas.height) {
+    gameOver()
   }
-  // if (ball.y + ball.r > canvas.height) {
-  //   gameOver()
-  // }
 
   //막대기에 부딪히면
   //top
   if (
     paddle.x < ball.x - ball.r &&
     paddle.x + paddle.w > ball.x + ball.r &&
-    paddle.y > ball.y + ball.r
+    paddle.y > ball.y + ball.r &&
+    paddle.y + paddle.h < ball.y - ball.r
   ) {
     ball.dy *= -1
   }
@@ -127,21 +131,26 @@ function moveBall() {
   if (
     paddle.x < ball.x - ball.r &&
     paddle.x + paddle.w > ball.x + ball.r &&
+    paddle.y < ball.y + ball.r &&
     paddle.y + paddle.h > ball.y - ball.r
   ) {
     ball.dy *= -1
   }
   //left
   if (
+    paddle.x + ball.r > ball.x - ball.r &&
     paddle.x < ball.x + ball.r &&
     paddle.y < ball.y + ball.r &&
     paddle.y + paddle.h > ball.y - ball.r
   ) {
     ball.dx *= -1
+    console.log('paddle: ' + paddle.x, paddle.y)
+    console.log('ball: ' + ball.x, ball.y)
   }
   //right
   if (
     paddle.x + paddle.w > ball.x - ball.r &&
+    paddle.x + paddle.w - ball.r > ball.x + ball.r &&
     paddle.y < ball.y + ball.r &&
     paddle.y + paddle.h > ball.y - ball.r
   ) {
@@ -160,7 +169,7 @@ function moveBall() {
         ) {
           brick.visible = false
           ball.dy *= -1
-          scoreValue++
+          increaseScore()
         }
       }
     })
@@ -175,21 +184,118 @@ function movePaddle() {
   }
 }
 
-function update() {
-  moveBall()
-  movePaddle()
+function increaseScore() {
+  scoreValue++
 
+  if (scoreValue === brickRowCount * brickColumnCount) {
+    gameWin()
+  }
+}
+
+function showAllBricks() {
+  bricks.forEach(column => {
+    column.forEach(brick => (brick.visible = true))
+  })
+}
+function update() {
+  if (isGameStart) {
+    moveBall()
+    movePaddle()
+
+    draw()
+
+    requestAnimationFrame(update)
+  } else {
+    cancelAnimationFrame(update)
+  }
+}
+
+function initializeGame() {
+  showAllBricks()
+  scoreValue = 0
+  ball.x = canvas.width / 2
+  ball.y = canvas.height / 2
+  ball.dx = 2
+  ball.dy = -2
+
+  paddle.x = canvas.width / 2 - 40
+}
+function gameWait() {
   draw()
 
-  requestAnimationFrame(update)
+  ctx.beginPath()
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.closePath()
+
+  ctx.beginPath()
+  ctx.font = '20px Arial'
+  ctx.fillStyle = '#fff'
+  ctx.fillText(
+    `게임을 시작하려면 Enter를 눌러주세요.`,
+    canvas.width / 2 - 180,
+    canvas.height / 2 - 50
+  )
+  ctx.closePath()
+}
+function gameStart() {
+  initializeGame()
+  draw()
+  isGameStart = true
+}
+
+function gameWin() {
+  ctx.beginPath()
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.closePath()
+
+  ctx.beginPath()
+  ctx.font = '20px Arial'
+  ctx.fillStyle = '#fff'
+  ctx.fillText(
+    `축하합니다, 승리했습니다! `,
+    canvas.width / 2 - 120,
+    canvas.height / 2 - 80
+  )
+  ctx.fillText(
+    `게임을 다시 시작하려면 Enter를 눌러주세요.`,
+    canvas.width / 2 - 180,
+    canvas.height / 2 - 50
+  )
+  ctx.closePath()
+  isGameStart = false
+}
+function gameOver() {
+  ctx.beginPath()
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.closePath()
+
+  ctx.beginPath()
+  ctx.font = '20px Arial'
+  ctx.fillStyle = '#fff'
+  ctx.fillText(`게임 오버`, canvas.width / 2 - 120, canvas.height / 2 - 80)
+  ctx.fillText(
+    `게임을 다시 시작하려면 Enter를 눌러주세요.`,
+    canvas.width / 2 - 180,
+    canvas.height / 2 - 50
+  )
+  ctx.closePath()
+  console.log('game over')
+  isGameStart = false
 }
 
 //키보드 이벤트
 function keyDownHandler(e) {
-  if (e.key === 'ArrowLeft' || e.key === 'Left') {
-    paddle.dx = -paddle.speed
-  } else if (e.key === 'ArrowRight' || e.key === 'Right') {
-    paddle.dx = paddle.speed
+  if (isGameStart) {
+    if (e.key === 'ArrowLeft' || e.key === 'Left') {
+      paddle.dx = -paddle.speed
+    } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+      paddle.dx = paddle.speed
+    }
+  } else {
+    if (e.key === 'Enter') gameStart()
   }
   update()
 }
@@ -214,8 +320,6 @@ close_btn.addEventListener('click', () => {
 })
 document.addEventListener('keydown', keyDownHandler)
 document.addEventListener('keyup', keyUpHandler)
-
-draw()
 
 /* 
 1. 캔버스 컨텍스트 생성
